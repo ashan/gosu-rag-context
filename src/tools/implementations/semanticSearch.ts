@@ -94,7 +94,7 @@ export class SemanticSearchTool extends BaseTool<SemanticSearchParams, SemanticS
                 function: {
                     name: this.name,
                     description: this.description,
-                    // @ts-expect-error - zod-to-json-schema type limitation
+                    // @ts-ignore - zod-to-json-schema type limitation
                     parameters: zodToJsonSchema(this.parameters) as any,
                 },
             };
@@ -103,7 +103,7 @@ export class SemanticSearchTool extends BaseTool<SemanticSearchParams, SemanticS
             return {
                 name: this.name,
                 description: this.description,
-                // @ts-expect-error - zod-to-json-schema type limitation
+                // @ts-ignore - zod-to-json-schema type limitation
                 input_schema: zodToJsonSchema(this.parameters) as any,
             };
         }

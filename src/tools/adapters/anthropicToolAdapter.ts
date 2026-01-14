@@ -13,7 +13,7 @@ export function toAnthropicToolSpec(
     return {
         name,
         description,
-        // @ts-expect-error - zod-to-json-schema type inference limitation
+        // @ts-ignore - zod-to-json-schema type inference limitation
         input_schema: zodToJsonSchema(parameters),
     };
 }

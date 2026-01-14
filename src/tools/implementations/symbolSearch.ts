@@ -62,7 +62,7 @@ export class SymbolSearchTool extends BaseTool<SymbolSearchParams, SymbolSearchR
                 function: {
                     name: this.name,
                     description: this.description,
-                    // @ts-expect-error - zod-to-json-schema type limitation
+                    // @ts-ignore - zod-to-json-schema type limitation
                     parameters: zodToJsonSchema(this.parameters),
                 },
             };
@@ -71,7 +71,7 @@ export class SymbolSearchTool extends BaseTool<SymbolSearchParams, SymbolSearchR
             return {
                 name: this.name,
                 description: this.description,
-                // @ts-expect-error - zod-to-json-schema type limitation
+                // @ts-ignore - zod-to-json-schema type limitation
                 input_schema: zodToJsonSchema(this.parameters),
             };
         }

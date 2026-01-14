@@ -49,7 +49,7 @@ export class GetFileTool extends BaseTool<GetFileParams, GetFileResult> {
                 function: {
                     name: this.name,
                     description: this.description,
-                    // @ts-expect-error - zod-to-json-schema type limitation
+                    // @ts-ignore - zod-to-json-schema type limitation
                     parameters: zodToJsonSchema(this.parameters) as any,
                 },
             };
@@ -58,7 +58,7 @@ export class GetFileTool extends BaseTool<GetFileParams, GetFileResult> {
             return {
                 name: this.name,
                 description: this.description,
-                // @ts-expect-error - zod-to-json-schema type limitation
+                // @ts-ignore - zod-to-json-schema type limitation
                 input_schema: zodToJsonSchema(this.parameters) as any,
             };
         }
