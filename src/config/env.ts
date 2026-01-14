@@ -52,12 +52,12 @@ const ConfigSchema = z.object({
     logLevel: LogLevelSchema.default('info'),
 
     // Prompts
-    agentSystemPromptPath: z.string().default('./AGENT_SYSTEM_PROMPT.md'),
-    promptPlannerSystem: z.string().optional(),
-    promptStepSystem: z.string().optional(),
-    promptStepDeveloper: z.string().optional(),
-    promptEvaluatorSystem: z.string().optional(),
-    promptFinalizerSystem: z.string().optional(),
+    agentSystemPromptPath: z.string().default('prompts/agent_system.md'),
+    promptPlannerSystemPath: z.string().default('prompts/planner_system.md'),
+    promptStepSystemPath: z.string().default('prompts/step_system.md'),
+    promptStepDeveloperPath: z.string().default('prompts/step_developer.md'),
+    promptEvaluatorSystemPath: z.string().default('prompts/evaluator_system.md'),
+    promptFinalizerSystemPath: z.string().default('prompts/finalizer_system.md'),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -101,11 +101,11 @@ export function loadConfig(): Config {
 
             // Prompts
             agentSystemPromptPath: process.env.AGENT_SYSTEM_PROMPT_PATH,
-            promptPlannerSystem: process.env.PROMPT_PLANNER_SYSTEM,
-            promptStepSystem: process.env.PROMPT_STEP_SYSTEM,
-            promptStepDeveloper: process.env.PROMPT_STEP_DEVELOPER,
-            promptEvaluatorSystem: process.env.PROMPT_EVALUATOR_SYSTEM,
-            promptFinalizerSystem: process.env.PROMPT_FINALIZER_SYSTEM,
+            promptPlannerSystemPath: process.env.PROMPT_PLANNER_SYSTEM_PATH,
+            promptStepSystemPath: process.env.PROMPT_STEP_SYSTEM_PATH,
+            promptStepDeveloperPath: process.env.PROMPT_STEP_DEVELOPER_PATH,
+            promptEvaluatorSystemPath: process.env.PROMPT_EVALUATOR_SYSTEM_PATH,
+            promptFinalizerSystemPath: process.env.PROMPT_FINALIZER_SYSTEM_PATH,
         };
 
         cachedConfig = ConfigSchema.parse(rawConfig);
