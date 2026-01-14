@@ -1,0 +1,49 @@
+{
+    "name": "gosu-chroma-rag-context",
+    "version": "1.0.0",
+    "description": "Vector-DB-agnostic RAG agent tooling for Guidewire Gosu codebases",
+    "type": "module",
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "scripts": {
+        "build": "NODE_OPTIONS='--max-old-space-size=8192' tsc",
+        "dev": "tsx src/main.ts",
+        "query": "tsx src/main.ts",
+        "start": "node dist/main.js",
+        "lint": "eslint src --ext .ts",
+        "test": "vitest",
+        "test:watch": "vitest --watch",
+        "test:coverage": "vitest --coverage",
+        "clean": "rm -rf dist"
+    },
+    "keywords": [
+        "rag",
+        "guidewire",
+        "gosu",
+        "vector-database",
+        "chromadb",
+        "ai",
+        "code-analysis"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "zod": "^3.22.4",
+        "zod-to-json-schema": "^3.22.4",
+        "dotenv": "^16.4.1",
+        "chromadb": "^1.8.1",
+        "openai": "^4.28.0",
+        "@anthropic-ai/sdk": "^0.17.1"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.16",
+        "typescript": "^5.3.3",
+        "tsx": "^4.7.1",
+        "vitest": "^1.2.2",
+        "@vitest/coverage-v8": "^1.2.2",
+        "eslint": "^8.56.0",
+        "@typescript-eslint/parser": "^6.20.0",
+        "@typescript-eslint/eslint-plugin": "^6.20.0"
+    }
+}
