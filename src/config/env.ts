@@ -52,12 +52,12 @@ const ConfigSchema = z.object({
     logLevel: LogLevelSchema.default('info'),
 
     // Prompts
-    agentSystemPromptPath: z.string().default('prompts/agent_system.md'),
-    promptPlannerSystemPath: z.string().default('prompts/planner_system.md'),
-    promptStepSystemPath: z.string().default('prompts/step_system.md'),
-    promptStepDeveloperPath: z.string().default('prompts/step_developer.md'),
-    promptEvaluatorSystemPath: z.string().default('prompts/evaluator_system.md'),
-    promptFinalizerSystemPath: z.string().default('prompts/finalizer_system.md'),
+    agentSystemPromptPath: z.string(),
+    promptPlannerSystemPath: z.string(),
+    promptStepSystemPath: z.string(),
+    promptStepDeveloperPath: z.string(),
+    promptEvaluatorSystemPath: z.string(),
+    promptFinalizerSystemPath: z.string(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
