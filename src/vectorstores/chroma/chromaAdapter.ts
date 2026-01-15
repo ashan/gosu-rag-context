@@ -173,7 +173,16 @@ export class ChromaAdapter implements VectorStoreAdapter {
      */
     async regexSearch(pattern: string, filePaths?: string[]): Promise<SearchHit[]> {
         const allHits: SearchHit[] = [];
-        const regex = new RegExp(pattern);
+
+        // Handle case-insensitive flag (?i)
+        let regexPattern = pattern;
+        let flags = '';
+        if (regexPattern.startsWith('(?i)')) {
+            regexPattern = regexPattern.substring(4);
+            flags = 'i';
+        }
+
+        const regex = new RegExp(regexPattern, flags);
 
         for (const [collectionName, collection] of this.collections) {
             try {

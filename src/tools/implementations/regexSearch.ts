@@ -37,7 +37,14 @@ export class RegexSearchTool extends BaseTool<RegexSearchParams, RegexSearchResu
     async execute(args: RegexSearchParams, ctx: ToolContext): Promise<RegexSearchResult> {
         // Validate regex pattern
         try {
-            new RegExp(args.pattern);
+            // Handle case-insensitive flag (?i) - common in LLM outputs
+            let pattern = args.pattern;
+            let flags = '';
+            if (pattern.startsWith('(?i)')) {
+                pattern = pattern.substring(4);
+                flags = 'i';
+            }
+            new RegExp(pattern, flags);
         } catch (error) {
             throw new Error(`Invalid regex pattern: ${args.pattern}. Error: ${error}`);
         }
