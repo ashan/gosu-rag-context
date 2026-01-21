@@ -31,6 +31,9 @@ export interface ChunkMetadata {
 
     /** SHA-256 content hash for change detection */
     contentHash: string;
+
+    /** Allow for additional metadata fields (e.g. from docs) */
+    [key: string]: any;
 }
 
 /**

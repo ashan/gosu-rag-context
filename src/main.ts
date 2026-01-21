@@ -2,7 +2,7 @@
 
 import { config } from 'dotenv';
 import { loadConfig } from './config/env.js';
-import { OpenAIClient } from './providers/buildLLM.js';
+import { createLLMClient } from './providers/buildLLM.js';
 import { ChromaAdapter } from './vectorstores/chroma/chromaAdapter.js';
 import { runAgent } from './runtime/agent.js';
 import { formatError } from './utils/errors.js';
@@ -27,15 +27,10 @@ async function main() {
         }
 
         // Load configuration
-        const envConfig = loadConfig();
+        loadConfig();
 
         // Build LLM client
-        let llm;
-        if (envConfig.provider === 'openai') {
-            llm = new OpenAIClient();
-        } else {
-            throw new Error(`Provider "${envConfig.provider}" is not implemented yet. Only "openai" is currently supported.`);
-        }
+        const llm = createLLMClient();
 
         // Build vector store
         const vectorStore = new ChromaAdapter();

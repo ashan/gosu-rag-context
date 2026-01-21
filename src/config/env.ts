@@ -7,7 +7,7 @@ dotenv.config();
 /**
  * Provider types supported by the system
  */
-export const ProviderSchema = z.enum(['openai', 'anthropic', 'azure_openai']);
+export const ProviderSchema = z.enum(['openai', 'anthropic', 'azure_openai', 'google']);
 export type Provider = z.infer<typeof ProviderSchema>;
 
 /**
@@ -15,6 +15,12 @@ export type Provider = z.infer<typeof ProviderSchema>;
  */
 export const ToolFormatSchema = z.enum(['openai', 'anthropic']);
 export type ToolFormat = z.infer<typeof ToolFormatSchema>;
+
+/**
+ * Embedding provider types
+ */
+export const EmbeddingProviderSchema = z.enum(['openai', 'google']);
+export type EmbeddingProvider = z.infer<typeof EmbeddingProviderSchema>;
 
 /**
  * Log level types
@@ -37,6 +43,12 @@ const ConfigSchema = z.object({
     azureOpenAIApiKey: z.string().optional(),
     azureOpenAIEndpoint: z.string().url().optional(),
     azureOpenAIDeployment: z.string().optional(),
+    googleApiKey: z.string().optional(),
+
+    // Embedding Configuration
+    embeddingProvider: EmbeddingProviderSchema.default('openai'),
+    embeddingModel: z.string().optional(),
+    embeddingApiKey: z.string().optional(),
 
     // Vector Store
     vectorStore: z.literal('chroma').default('chroma'),
@@ -45,6 +57,9 @@ const ConfigSchema = z.object({
     chromaCollections: z.string().transform(val => val.split(',').map(s => s.trim())).default('guidewire-code'),
     chromaTenant: z.string().optional(),
     chromaDatabase: z.string().optional(),
+
+    // Source Codebase (for file system tools)
+    sourceRootPath: z.string().optional(),
 
     // Runtime
     maxTurns: z.coerce.number().int().positive().default(10),
@@ -85,6 +100,12 @@ export function loadConfig(): Config {
             azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
             azureOpenAIEndpoint: process.env.AZURE_OPENAI_ENDPOINT,
             azureOpenAIDeployment: process.env.AZURE_OPENAI_DEPLOYMENT,
+            googleApiKey: process.env.GOOGLE_API_KEY,
+
+            // Embedding Configuration
+            embeddingProvider: process.env.EMBEDDING_PROVIDER,
+            embeddingModel: process.env.EMBEDDING_MODEL,
+            embeddingApiKey: process.env.EMBEDDING_API_KEY,
 
             // Vector Store
             vectorStore: process.env.VECTOR_STORE,
@@ -93,6 +114,9 @@ export function loadConfig(): Config {
             chromaCollections: process.env.CHROMA_COLLECTIONS,
             chromaTenant: process.env.CHROMA_TENANT,
             chromaDatabase: process.env.CHROMA_DATABASE,
+
+            // Source Codebase
+            sourceRootPath: process.env.SOURCE_ROOT_PATH,
 
             // Runtime
             maxTurns: process.env.MAX_TURNS,
@@ -143,6 +167,34 @@ function validateProviderConfig(config: Config): void {
         case 'azure_openai':
             if (!config.azureOpenAIApiKey || !config.azureOpenAIEndpoint) {
                 throw new Error('AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT are required when PROVIDER=azure_openai');
+            }
+            break;
+
+        case 'google':
+            if (!config.googleApiKey) {
+                throw new Error('GOOGLE_API_KEY is required when PROVIDER=google');
+            }
+            break;
+    }
+
+    // Validate embedding provider API key
+    validateEmbeddingConfig(config);
+}
+
+/**
+ * Validate embedding provider configuration
+ */
+function validateEmbeddingConfig(config: Config): void {
+    const embeddingApiKey = config.embeddingApiKey;
+    switch (config.embeddingProvider) {
+        case 'openai':
+            if (!embeddingApiKey && !config.openaiApiKey) {
+                throw new Error('EMBEDDING_API_KEY or OPENAI_API_KEY is required when EMBEDDING_PROVIDER=openai');
+            }
+            break;
+        case 'google':
+            if (!embeddingApiKey && !config.googleApiKey) {
+                throw new Error('EMBEDDING_API_KEY or GOOGLE_API_KEY is required when EMBEDDING_PROVIDER=google');
             }
             break;
     }

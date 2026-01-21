@@ -159,44 +159,77 @@ The system will:
 
 ## 🛠️ Available Tools
 
-The agent has access to 4 powerful code retrieval tools:
+The agent has access to 8 powerful retrieval tools:
 
-### 1. `symbol_search(query, filePaths?)`
+### Vector Store Tools (for Gosu code)
+
+#### 1. `symbol_search(query, filePaths?)`
 Find code by symbol/class/function name.
 
 ```typescript
-// Example tool call
 symbol_search("AccountEnhancement_ACC")
 symbol_search("validatePrimaryAddress", ["nz/co/acc"])
 ```
 
-### 2. `get_file(filePath)`
-Retrieve complete file contents.
+#### 2. `get_file(filePath)`
+Retrieve complete file contents from vector store.
 
 ```typescript
-// Example tool call
 get_file("nz/co/acc/account/Account.gs")
 ```
 
-### 3. `regex_search(pattern, filePaths?)`
+#### 3. `regex_search(pattern, filePaths?)`
 Find code matching regex patterns.
 
 ```typescript
-// Example tool call
 regex_search("gw\\.api\\.database\\.Query")
 regex_search("@Override.*validate")
 ```
 
-### 4. `semantic_search(query, topK?, filter?)`
+#### 4. `semantic_search(query, topK?, filter?)`
 Embedding-based similarity search.
 
 ```typescript
-// Example tool call
 semantic_search("account validation logic", 10)
-semantic_search("database query builder", 5, { chunkType: "function" })
+semantic_search("database query", 5, { chunkType: "function" })
 ```
 
----
+### Documentation Search
+
+#### 5. `guidewire_docs_search(query, topK?, category?)`
+Search official Guidewire PDF documentation.
+
+```typescript
+guidewire_docs_search("contact manager configuration")
+guidewire_docs_search("billing integration", 10)
+```
+
+### File System Tools (for XML, XSD, YAML configs)
+
+These tools access files directly from `SOURCE_ROOT_PATH` (not in vector store).
+
+#### 6. `find_source_files(pattern, maxResults?)`
+Find files by glob pattern.
+
+```typescript
+find_source_files("**/*.xml")
+find_source_files("**/messaging*.yaml", 20)
+```
+
+#### 7. `list_source_directory(path?, pattern?)`
+Browse directory contents.
+
+```typescript
+list_source_directory("config")
+list_source_directory("integration", "*.yaml")
+```
+
+#### 8. `read_source_file(path)`
+Read file contents by relative path.
+
+```typescript
+read_source_file("config/messaging-config.xml")
+```
 
 ## 📝 Agent System Prompt
 

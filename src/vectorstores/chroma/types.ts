@@ -56,5 +56,8 @@ export function chromaMetadataToChunkMetadata(chromaMeta: Record<string, any>): 
         metadata.methodName = String(chromaMeta.methodName);
     }
 
-    return metadata;
+    return {
+        ...chromaMeta,
+        ...metadata
+    };
 }

@@ -3,6 +3,10 @@ import { SymbolSearchTool } from './implementations/symbolSearch.js';
 import { GetFileTool } from './implementations/fileGet.js';
 import { RegexSearchTool } from './implementations/regexSearch.js';
 import { SemanticSearchTool } from './implementations/semanticSearch.js';
+import { GuidewireDocsTool } from './implementations/docSearch.js';
+import { ReadSourceFileTool } from './implementations/readSourceFile.js';
+import { ListSourceDirectoryTool } from './implementations/listSourceDirectory.js';
+import { FindSourceFilesTool } from './implementations/findSourceFiles.js';
 import { loadConfig } from '../config/env.js';
 
 /**
@@ -21,6 +25,14 @@ export class ToolRegistry {
         this.registerTool(new GetFileTool());
         this.registerTool(new RegexSearchTool());
         this.registerTool(new SemanticSearchTool());
+        this.registerTool(new GuidewireDocsTool());
+
+        // File system tools (only if source root is configured)
+        if (loadConfig().sourceRootPath) {
+            this.registerTool(new ReadSourceFileTool());
+            this.registerTool(new ListSourceDirectoryTool());
+            this.registerTool(new FindSourceFilesTool());
+        }
     }
 
     /**

@@ -1,4 +1,4 @@
-import { ChromaClient, Collection, OpenAIEmbeddingFunction } from 'chromadb';
+import { ChromaClient, Collection } from 'chromadb';
 import type {
     VectorStoreAdapter,
     SearchHit,
@@ -7,6 +7,7 @@ import type {
 } from '../VectorStoreAdapter.js';
 import { loadConfig, getChromaUrl } from '../../config/env.js';
 import { chromaMetadataToChunkMetadata } from './types.js';
+import { createEmbeddingFunction } from '../../embeddings/embeddings.js';
 
 /**
  * ChromaDB adapter implementation supporting multiple collections
@@ -28,11 +29,8 @@ export class ChromaAdapter implements VectorStoreAdapter {
      */
     async connect(): Promise<void> {
         try {
-            // Create embedding function for semantic search
-            const embedder = new OpenAIEmbeddingFunction({
-                openai_api_key: this.config.openaiApiKey || '',
-                openai_model: 'text-embedding-ada-002',
-            });
+            // Create embedding function based on configuration
+            const embedder = createEmbeddingFunction(this.config);
 
             for (const collectionName of this.collectionNames) {
                 const collection = await this.client.getCollection({
@@ -231,6 +229,11 @@ export class ChromaAdapter implements VectorStoreAdapter {
         const allHits: SearchHit[] = [];
 
         for (const [collectionName, collection] of this.collections) {
+            // Enforce collection filtering if specified
+            if (filter?.collectionName && filter.collectionName !== collectionName) {
+                continue;
+            }
+
             try {
                 // Build where clause from filter
                 const where = this.buildWhereClause(filter);
