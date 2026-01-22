@@ -157,9 +157,9 @@ graph TD
  # Development mode
  npm run dev "How does account validation work?"
  
- # Production mode (compiled)
+# Production mode (compiled)
  npm run build
- npm run start "How does account validation work?"
+ npm run agent "How does account validation work?"
  ```
 
 ---
@@ -305,25 +305,25 @@ AGENT_SYSTEM_PROMPT_PATH=./prompts/custom-agent.md
 ### Simple Queries
 
 ```bash
-npm run start "What is the AccountEnhancement class?"
-npm run start "Show me the validatePrimaryAddress function"
-npm run start "Find all uses of gw.api.database.Query"
+npm run agent "What is the AccountEnhancement class?"
+npm run agent "Show me the validatePrimaryAddress function"
+npm run agent "Find all uses of gw.api.database.Query"
 ```
 
 ### Complex Queries
 
 ```bash
-npm run start "How does account validation work in the ACC project?"
-npm run start "What enhancements exist for the Account entity?"
-npm run start "Show me how policy location is validated"
+npm run agent "How does account validation work in the ACC project?"
+npm run agent "What enhancements exist for the Account entity?"
+npm run agent "Show me how policy location is validated"
 ```
 
 ### Exploratory Queries
 
 ```bash
-npm run start "What database query utilities are available?"
-npm run start "Find examples of custom validations"
-npm run start "How is the billing system plugin implemented?"
+npm run agent "What database query utilities are available?"
+npm run agent "Find examples of custom validations"
+npm run agent "How is the billing system plugin implemented?"
 ```
 
 ---
