@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { IEmbeddingProvider } from '../interfaces';
+import { IEmbeddingProvider } from '../interfaces.js';
 import * as dotenv from 'dotenv';
 
 dotenv.config();

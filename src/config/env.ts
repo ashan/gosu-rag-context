@@ -81,6 +81,14 @@ const ConfigSchema = z.object({
     ),
     historyContextSize: z.coerce.number().int().positive().default(6),
     historyRetentionSize: z.coerce.number().int().positive().default(50),
+
+    // Memory - Advanced (Summarization & Caching)
+    memorySummarizationEnabled: z.preprocess(
+        val => val === 'true' || val === true,
+        z.boolean().default(true)
+    ),
+    memoryMaxTokens: z.coerce.number().int().positive().default(2000),
+    memoryCacheThreshold: z.coerce.number().min(0).max(1).default(0.85),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -143,6 +151,11 @@ export function loadConfig(): Config {
             memoryEnabled: process.env.MEMORY_ENABLED,
             historyContextSize: process.env.HISTORY_CONTEXT_SIZE,
             historyRetentionSize: process.env.HISTORY_RETENTION_SIZE,
+
+            // Memory - Advanced
+            memorySummarizationEnabled: process.env.MEMORY_SUMMARIZATION_ENABLED,
+            memoryMaxTokens: process.env.MEMORY_MAX_TOKENS,
+            memoryCacheThreshold: process.env.MEMORY_CACHE_THRESHOLD,
         };
 
         cachedConfig = ConfigSchema.parse(rawConfig);

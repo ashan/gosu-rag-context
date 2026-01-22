@@ -1,5 +1,5 @@
-import { IEmbeddingProvider } from '../interfaces';
-import { GoogleEmbeddings } from './GoogleEmbeddings';
+import { IEmbeddingProvider } from '../interfaces.js';
+import { GoogleEmbeddings } from './GoogleEmbeddings.js';
 
 export function createEmbeddingProvider(): IEmbeddingProvider {
     const provider = process.env.EMBEDDING_PROVIDER || 'google';

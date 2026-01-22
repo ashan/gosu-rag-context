@@ -22,13 +22,13 @@ async function main() {
 
         if (!question) {
             console.error('Error: No question provided');
-            console.error('Usage: npm run start "Your question here"');
-            console.error('Example: npm run start "How does account validation work?"');
+            console.error('Usage: npm run agent "Your question here"');
+            console.error('Example: npm run agent "How does account validation work?"');
             process.exit(1);
         }
 
         // Load configuration
-        loadConfig();
+        const appConfig = loadConfig();
 
         // Build LLM client
         const llm = createLLMClient();
@@ -38,12 +38,30 @@ async function main() {
         await vectorStore.connect();
 
         // Initialize memory (conditional)
-        const config = loadConfig();
         let historyContext: string | undefined;
         let memory: ConversationManager | undefined;
+        let answer: string;
 
-        if (config.memoryEnabled) {
+        if (appConfig.memoryEnabled) {
             memory = new ConversationManager();
+
+            // Check for duplicate/similar query first
+            const cached = await memory.findSimilarQuery(question);
+            if (cached) {
+                console.log(`\n🔄 Found similar previous query (${(cached.similarity * 100).toFixed(0)}% match)`);
+                console.log(`   Original: "${cached.query.substring(0, 60)}..."`);
+                console.log('   Returning cached response.\n');
+
+                answer = cached.response;
+
+                // Print the cached answer
+                console.log('\n📝 Cached Answer:\n');
+                console.log(answer);
+                console.log('\n');
+                return;
+            }
+
+            // Get history context for the agent
             historyContext = memory.getHistoryContext();
             if (historyContext) {
                 console.log('📚 Loaded conversation history context');
@@ -51,11 +69,11 @@ async function main() {
         }
 
         // Run the agent
-        const answer = await runAgent(llm, vectorStore, question, historyContext);
+        answer = await runAgent(llm, vectorStore, question, historyContext);
 
-        // Save interaction (if memory enabled)
+        // Save interaction (if memory enabled, passes LLM for potential summarization)
         if (memory) {
-            memory.saveTurn(question, answer);
+            await memory.saveTurn(question, answer, llm);
         }
 
         // Print the final answer
