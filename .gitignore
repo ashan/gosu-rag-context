@@ -41,3 +41,4 @@ coverage/
 chroma_data/
 ingestion.db
 ingestion-report-*.json
+.conversation_history.json

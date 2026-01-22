@@ -5,12 +5,17 @@ import { getPlannerSystemPrompt } from '../config/prompts.js';
 /**
  * Create a plan from a user query
  */
-export async function planFromQuery(llm: LLMClient, userQuery: string): Promise<Plan> {
+export async function planFromQuery(llm: LLMClient, userQuery: string, historyContext?: string): Promise<Plan> {
     const systemPrompt = getPlannerSystemPrompt();
 
     const messages = [
         { role: 'system' as const, content: systemPrompt },
-        { role: 'user' as const, content: userQuery },
+        {
+            role: 'user' as const,
+            content: historyContext
+                ? `Previous Conversation Context:\n${historyContext}\n\nCurrent User Query: ${userQuery}`
+                : userQuery
+        },
     ];
 
     try {

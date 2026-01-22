@@ -12,12 +12,17 @@ import type { Plan, StepOutcome } from '../planning/schemas.js';
 export async function runAgent(
     llm: LLMClient,
     vectorStore: VectorStoreAdapter,
-    question: string
+    question: string,
+    historyContext?: string
 ): Promise<string> {
     console.log('\n='.repeat(70));
     console.log('🤖 RAG Agent Starting');
     console.log('='.repeat(70));
     console.log(`Question: ${question}\n`);
+
+    if (historyContext) {
+        console.log('[Agent] History context provided');
+    }
 
     // Health check
     console.log('[Agent] Checking vector store connectivity...');
@@ -29,7 +34,7 @@ export async function runAgent(
 
     // Step 1: Create plan
     console.log('[Agent] Creating execution plan...');
-    let plan: Plan = await planFromQuery(llm, question);
+    let plan: Plan = await planFromQuery(llm, question, historyContext);
     console.log(`[Agent] Plan created with ${plan.steps.length} steps\n`);
 
     // Step 2: Execute plan

@@ -6,6 +6,7 @@ import { createLLMClient } from './providers/buildLLM.js';
 import { ChromaAdapter } from './vectorstores/chroma/chromaAdapter.js';
 import { runAgent } from './runtime/agent.js';
 import { formatError } from './utils/errors.js';
+import { ConversationManager } from './memory/ConversationManager.js';
 
 // Load environment variables
 config();
@@ -36,8 +37,19 @@ async function main() {
         const vectorStore = new ChromaAdapter();
         await vectorStore.connect();
 
+        // Initialize memory
+        const memory = new ConversationManager();
+        const historyContext = memory.getHistoryContext();
+
+        if (historyContext) {
+            console.log('📚 Loaded conversation history context');
+        }
+
         // Run the agent
-        const answer = await runAgent(llm, vectorStore, question);
+        const answer = await runAgent(llm, vectorStore, question, historyContext);
+
+        // Save interaction
+        memory.saveTurn(question, answer);
 
         // Print the final answer
         console.log('\n📝 Final Answer:\n');

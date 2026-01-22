@@ -21,8 +21,8 @@
         "test:watch": "vitest --watch",
         "test:coverage": "vitest --coverage",
         "clean": "rm -rf dist",
-        "clean:cache": "rm -rf .cache && echo '✅ Cleaned cache'",
-        "clean:all": "rm -rf .cache chroma_data && echo '✅ Cleaned everything'"
+        "clean:cache": "rm -rf .cache && cd ../gosu-chroma-rag && npm run clean-cache && cd ../chroma-rag-docs && npm run clean-cache && echo '✅ Cleaned caches'",
+        "clean:all": "rm -rf .cache chroma_data && cd ../gosu-chroma-rag && npm run clean-cache && cd ../chroma-rag-docs && npm run clean-cache && echo '✅ Cleaned everything'"
     },
     "keywords": [
         "rag",

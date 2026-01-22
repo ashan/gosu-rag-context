@@ -73,6 +73,10 @@ const ConfigSchema = z.object({
     promptStepDeveloperPath: z.string(),
     promptEvaluatorSystemPath: z.string(),
     promptFinalizerSystemPath: z.string(),
+
+    // Memory
+    historyContextSize: z.coerce.number().int().positive().default(6),
+    historyRetentionSize: z.coerce.number().int().positive().default(50),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -130,6 +134,10 @@ export function loadConfig(): Config {
             promptStepDeveloperPath: process.env.PROMPT_STEP_DEVELOPER_PATH,
             promptEvaluatorSystemPath: process.env.PROMPT_EVALUATOR_SYSTEM_PATH,
             promptFinalizerSystemPath: process.env.PROMPT_FINALIZER_SYSTEM_PATH,
+
+            // Memory
+            historyContextSize: process.env.HISTORY_CONTEXT_SIZE,
+            historyRetentionSize: process.env.HISTORY_RETENTION_SIZE,
         };
 
         cachedConfig = ConfigSchema.parse(rawConfig);
