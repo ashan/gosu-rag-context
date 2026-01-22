@@ -43,54 +43,51 @@ export async function runStep(
 
         // Check if we have tool calls
         if (response.tool_calls && response.tool_calls.length > 0) {
-            const toolCall = response.tool_calls[0]; // Single tool call per turn
-
-            if (!toolCall) {
-                console.warn(`[Step ${step.id}] Received empty tool call array`);
-                break;
-            }
-
-            console.log(`[Step ${step.id}] Tool call: ${toolCall.function.name}`);
-
-            // Add assistant message with tool call (required by OpenAI)
+            // Add assistant message with ALL tool calls first
             messages.push({
                 role: 'assistant',
                 content: response.content || null,
                 tool_calls: response.tool_calls,
             } as any);
 
-            // Execute tool
-            try {
-                const tool = registry.getTool(toolCall.function.name);
-                if (!tool) {
-                    throw new ToolError(toolCall.function.name, 'Tool not found');
+            // Execute ALL tool calls and add responses for each
+            for (const toolCall of response.tool_calls) {
+                if (!toolCall) continue;
+
+                console.log(`[Step ${step.id}] Tool call: ${toolCall.function.name}`);
+
+                try {
+                    const tool = registry.getTool(toolCall.function.name);
+                    if (!tool) {
+                        throw new ToolError(toolCall.function.name, 'Tool not found');
+                    }
+
+                    // Parse arguments
+                    const args = JSON.parse(toolCall.function.arguments);
+                    const parsedArgs = tool.parse(args);
+
+                    // Execute
+                    const result = await tool.execute(parsedArgs, { vectorStore });
+
+                    // Add tool result message
+                    messages.push(buildToolResultMessage(
+                        toolCall.id,
+                        toolCall.function.name,
+                        result
+                    ));
+
+                    console.log(`[Step ${step.id}] Tool result received (${typeof result})`);
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    console.error(`[Step ${step.id}] Tool execution error:`, errorMessage);
+
+                    // Add error as tool result
+                    messages.push(buildToolResultMessage(
+                        toolCall.id,
+                        toolCall.function.name,
+                        { error: errorMessage }
+                    ));
                 }
-
-                // Parse arguments
-                const args = JSON.parse(toolCall.function.arguments);
-                const parsedArgs = tool.parse(args);
-
-                // Execute
-                const result = await tool.execute(parsedArgs, { vectorStore });
-
-                // Add tool result message
-                messages.push(buildToolResultMessage(
-                    toolCall.id,
-                    toolCall.function.name,
-                    result
-                ));
-
-                console.log(`[Step ${step.id}] Tool result received (${typeof result})`);
-            } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                console.error(`[Step ${step.id}] Tool execution error:`, errorMessage);
-
-                // Add error as tool result
-                messages.push(buildToolResultMessage(
-                    toolCall.id,
-                    toolCall.function.name,
-                    { error: errorMessage }
-                ));
             }
         } else {
             // No more tool calls - agent has enough information
