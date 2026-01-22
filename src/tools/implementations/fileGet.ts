@@ -1,6 +1,9 @@
 import { z } from 'zod';
+import * as fs from 'fs';
+import * as path from 'path';
 import { BaseTool, type ToolContext } from '../Tool.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+import { loadConfig } from '../../config/env.js';
 
 const GetFileParamsSchema = z.object({
     filePath: z.string().min(1).describe('Relative file path from source root'),
@@ -28,18 +31,60 @@ export class GetFileTool extends BaseTool<GetFileParams, GetFileResult> {
     readonly parameters = GetFileParamsSchema;
 
     async execute(args: GetFileParams, ctx: ToolContext): Promise<GetFileResult> {
-        const fileResult = await ctx.vectorStore.getFileByPath(args.filePath);
+        try {
+            // Try vector store first (for ingested code)
+            const fileResult = await ctx.vectorStore.getFileByPath(args.filePath);
 
-        const lineCount = fileResult.contents.split('\n').length;
+            const lineCount = fileResult.contents.split('\n').length;
+            const result: any = {
+                filePath: fileResult.filePath,
+                contents: fileResult.contents,
+                lineCount,
+            };
+            if (fileResult.metadata?.language) result.language = fileResult.metadata.language;
+            if (fileResult.metadata?.package) result.package = fileResult.metadata.package;
+            return result;
+        } catch (error: any) {
+            // Fallback: Try reading from filesystem if vector store fails
+            if (error.message && (error.message.includes('File not found') || error.message.includes('not found in vector store'))) {
+                return this.tryReadFromSource(args.filePath);
+            }
+            throw error;
+        }
+    }
 
-        const result: any = {
-            filePath: fileResult.filePath,
-            contents: fileResult.contents,
-            lineCount,
+    private tryReadFromSource(relativePath: string): GetFileResult {
+        const config = loadConfig();
+        const sourceRoot = config.sourceRootPath;
+
+        if (!sourceRoot) {
+            throw new Error(`File not found in vector store, and SOURCE_ROOT_PATH not set to check filesystem: ${relativePath}`);
+        }
+
+        const fullPath = path.join(sourceRoot, relativePath);
+        if (!fs.existsSync(fullPath)) {
+            throw new Error(`File not found in vector store or filesystem: ${relativePath}`);
+        }
+
+        // Basic security check
+        const resolvedPath = path.resolve(fullPath);
+        const resolvedRoot = path.resolve(sourceRoot);
+        if (!resolvedPath.startsWith(resolvedRoot)) {
+            throw new Error(`Path traversal detected: ${relativePath}`);
+        }
+
+        const stats = fs.statSync(fullPath);
+        if (stats.size > 1024 * 1024) { // 1MB limit
+            throw new Error(`File too large for fallback reading: ${relativePath}`);
+        }
+
+        const contents = fs.readFileSync(fullPath, 'utf-8');
+        return {
+            filePath: relativePath,
+            contents,
+            lineCount: contents.split('\n').length,
+            language: path.extname(relativePath).slice(1) // simple extension fallback
         };
-        if (fileResult.metadata?.language) result.language = fileResult.metadata.language;
-        if (fileResult.metadata?.package) result.package = fileResult.metadata.package;
-        return result;
     }
 
     toToolSpec(format: 'openai' | 'anthropic'): object {

@@ -75,6 +75,10 @@ const ConfigSchema = z.object({
     promptFinalizerSystemPath: z.string(),
 
     // Memory
+    memoryEnabled: z.preprocess(
+        val => val === 'true' || val === true,
+        z.boolean().default(true)
+    ),
     historyContextSize: z.coerce.number().int().positive().default(6),
     historyRetentionSize: z.coerce.number().int().positive().default(50),
 });
@@ -136,6 +140,7 @@ export function loadConfig(): Config {
             promptFinalizerSystemPath: process.env.PROMPT_FINALIZER_SYSTEM_PATH,
 
             // Memory
+            memoryEnabled: process.env.MEMORY_ENABLED,
             historyContextSize: process.env.HISTORY_CONTEXT_SIZE,
             historyRetentionSize: process.env.HISTORY_RETENTION_SIZE,
         };

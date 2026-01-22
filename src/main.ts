@@ -37,19 +37,26 @@ async function main() {
         const vectorStore = new ChromaAdapter();
         await vectorStore.connect();
 
-        // Initialize memory
-        const memory = new ConversationManager();
-        const historyContext = memory.getHistoryContext();
+        // Initialize memory (conditional)
+        const config = loadConfig();
+        let historyContext: string | undefined;
+        let memory: ConversationManager | undefined;
 
-        if (historyContext) {
-            console.log('📚 Loaded conversation history context');
+        if (config.memoryEnabled) {
+            memory = new ConversationManager();
+            historyContext = memory.getHistoryContext();
+            if (historyContext) {
+                console.log('📚 Loaded conversation history context');
+            }
         }
 
         // Run the agent
         const answer = await runAgent(llm, vectorStore, question, historyContext);
 
-        // Save interaction
-        memory.saveTurn(question, answer);
+        // Save interaction (if memory enabled)
+        if (memory) {
+            memory.saveTurn(question, answer);
+        }
 
         // Print the final answer
         console.log('\n📝 Final Answer:\n');

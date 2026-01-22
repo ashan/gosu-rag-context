@@ -301,7 +301,7 @@ export class GoogleClient implements LLMClient {
                     });
                 }
             } else if (m.role === 'tool' || (m.role as any) === 'function') {
-                role = 'function';
+                role = 'function'; // Gemini SDK requires 'function' role for functionResponse parts
                 // Find function name from ID
                 const callId = (m as any).tool_call_id;
                 const assistantMsg = messages.find(msg =>
@@ -324,7 +324,14 @@ export class GoogleClient implements LLMClient {
             }
 
             if (parts.length > 0) {
-                history.push({ role, parts });
+                // Consolidate consecutive entries with same role (Gemini requires strict alternation)
+                const lastEntry = history[history.length - 1];
+                if (lastEntry && lastEntry.role === role) {
+                    // Merge parts into existing entry
+                    lastEntry.parts.push(...parts);
+                } else {
+                    history.push({ role, parts });
+                }
             }
         }
 

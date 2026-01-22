@@ -25,7 +25,11 @@ Available Tools:
 7. list_source_directory(path?, pattern?) - Browse directory contents
 8. read_source_file(path) - Read file contents by relative path (use for files found by find_source_files)
 
-**IMPORTANT**: When documentation or code references configuration files (XML, XSD, YAML), use file system tools to locate and read them. Do NOT use get_file for non-Gosu files.
+**IMPORTANT GUIDELINES:**
+1. **Code (Gosu)**: For `.gs`, `.gsx`, `.gst` files found via `symbol_search`, `regex_search`, or `semantic_search`, use **`get_file(path)`**.
+2. **Config/Other**: For XML, XSD, YAML, Properties, etc. found via `find_source_files`, use **`read_source_file(path)`**.
+3. **Hybrid**: If `get_file` fails with "File not found", try `read_source_file` as a fallback.
+4. **Reference**: Documentation often cites paths like `modules/configuration/...`. Use `find_source_files` to verify existence, then `read_source_file` to read.
 
 **CRITICAL**: You may ONLY use the tools listed above. Do NOT attempt to call any other tools (e.g., run_code, execute, shell, etc.) - they do not exist.
 
