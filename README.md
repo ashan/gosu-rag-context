@@ -3,7 +3,7 @@
 **Vector-DB-agnostic RAG agent system for querying Guidewire Gosu codebases**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-v20_(LTS)-green.svg)](https://nodejs.org/)
 [![ChromaDB](https://img.shields.io/badge/ChromaDB-1.8-purple.svg)](https://www.trychroma.com/)
 
 ---
@@ -59,54 +59,94 @@ graph TD
 ---
 
 ## 🚀 Quick Start
+ 
+ ### Prerequisites
+ 
+ - **Node.js**: v20 (LTS) - Required for native module compatibility (tree-sitter)
+ - **Docker**: For running ChromaDB
+ - **Sibling Projects**: `gosu-chroma-rag` and `chroma-rag-docs` checked out in the same parent directory
+ - **API Keys**: Google Gemini API Key (or OpenAI/Anthropic)
+ 
+ ### Installation
+ 
+ ```bash
+ # Clone core projects into the same directory
+ git clone <repo>/gosu-chroma-rag-context
+ git clone <repo>/gosu-chroma-rag
+ git clone <repo>/chroma-rag-docs
+ 
+ cd gosu-chroma-rag-context
+ 
+ # Install dependencies
+ npm install
+ 
+ # Install sibling dependencies (Important for fresh clones)
+ npm run fix:deps
+ 
+ # Copy environment template
+ cp .env.example .env
+ 
+ # Edit .env with your configuration
+ # Set GOOGLE_API_KEY
+ nano .env
+ ```
+ 
+ ### Infrastructure
+ 
+ Start the shared ChromaDB instance:
+ 
+ ```bash
+ docker compose up -d
+ ```
+ 
+ ### Ingestion
+ 
+ Ingest code and documentation using the unified CLI:
+ 
+ ```bash
+ # Ingest Gosu Code
+ npm run ingest:code
+ 
+ # Ingest PDF Documentation
+ npm run ingest:docs
+ 
+ # Ingest Both
+ npm run ingest:all
+ ```
+ 
+ ### Query
+ 
+ Query the consolidated knowledge base (Code + Docs):
+ 
+ ```bash
+ npm run query "How does account validation work?"
+ ```
+ 
+ ### Statistics
+ 
+ View collection statistics:
+ 
+ ```bash
+ npm run stats
+ ```
+ 
+ ---
+ 
+ ## 🔧 Configuration
+ 
+ ### Environment Variables
+ 
+ | Variable | Description | Default |
+ |----------|-------------|---------|
+ | `PROVIDER` | LLM provider (`google` \| `openai` \| `anthropic`) | `google` |
+ | `MODEL` | Model identifier (e.g., `gemini-1.5-flash`) | `gemini-1.5-flash` |
+ | `EMBEDDING_PROVIDER` | Embedding provider (`google` \| `openai`) | `google` |
+ | `GOOGLE_API_KEY` | Google API key | Required |
+ | `CHROMA_HOST` | ChromaDB host | `localhost` |
+ | `CHROMA_PORT` | ChromaDB port | `8000` |
+ | `CODE_COLLECTION` | Code collection name | `guidewire-code` |
+ | `DOCS_COLLECTION` | Docs collection name | `guidewire-docs` |
 
-### Prerequisites
-
-- **Node.js** 20+
-- **ChromaDB** running (from gosu-rag)
-- **OpenAI API Key**
-- **Indexed Codebase** from [gosu-rag](https://github.com/ashan/gosu-rag)
-
-### Installation
-
-```bash
-# Clone this repository
-git clone <repository-url>
-cd gosu-chroma-rag-context
-
-# Install dependencies
-npm install
-
-# Copy environment template
-cp .env.example .env
-
-# Edit .env with your configuration
-nano .env
-```
-
-### Configuration
-
-Edit `.env`:
-
-```bash
-# LLM Provider
-PROVIDER=openai
-MODEL=gpt-4o-mini
-OPENAI_API_KEY=your-api-key-here
-
-# Vector Store (from gosu-rag)
-CHROMA_HOST=localhost
-CHROMA_PORT=8000
-CHROMA_COLLECTIONS=guidewire-code
-
-# Runtime
-MAX_TURNS=10
-TOP_K=6
-LOG_LEVEL=info
-
-# Agent Prompt
-AGENT_SYSTEM_PROMPT_PATH=./AGENT_SYSTEM_PROMPT.md
-```
 
 ### Run a Query
  

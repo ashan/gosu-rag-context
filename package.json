@@ -9,13 +9,20 @@
     "scripts": {
         "build": "NODE_OPTIONS='--max-old-space-size=8192' tsc",
         "dev": "tsx src/main.ts",
-        "query": "tsx src/main.ts",
+        "query": "tsx src/cli/query.ts",
         "start": "node dist/main.js",
+        "ingest:code": "tsx src/cli/ingestCode.ts",
+        "ingest:docs": "tsx src/cli/ingestDocs.ts",
+        "ingest:all": "npm run ingest:code && npm run ingest:docs",
+        "fix:deps": "cd ../gosu-chroma-rag && npm install --legacy-peer-deps && npm rebuild && cd ../chroma-rag-docs && npm install && echo '✅ All sibling dependencies fixed'",
+        "stats": "tsx src/cli/stats.ts",
         "lint": "eslint src --ext .ts",
         "test": "vitest",
         "test:watch": "vitest --watch",
         "test:coverage": "vitest --coverage",
-        "clean": "rm -rf dist"
+        "clean": "rm -rf dist",
+        "clean:cache": "rm -rf .cache && echo '✅ Cleaned cache'",
+        "clean:all": "rm -rf .cache chroma_data && echo '✅ Cleaned everything'"
     },
     "keywords": [
         "rag",
@@ -32,6 +39,7 @@
         "@anthropic-ai/sdk": "^0.17.1",
         "@google/generative-ai": "^0.24.1",
         "chromadb": "^1.8.1",
+        "commander": "^14.0.2",
         "dotenv": "^16.4.1",
         "openai": "^4.28.0",
         "zod": "^3.22.4",
