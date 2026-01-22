@@ -1,16 +1,17 @@
 
 services:
   chroma:
-    image: chromadb/chroma:latest
+    image: ghcr.io/chroma-core/chroma:latest
     container_name: guidewire-rag-chroma
     ports:
       - "8000:8000"
     volumes:
-      - ./chroma_data:/chroma/chroma
+      - ./chroma_data:/data
     environment:
       - IS_PERSISTENT=TRUE
-      - PERSIST_DIRECTORY=/chroma/chroma
       - ANONYMIZED_TELEMETRY=FALSE
+      - PERSIST_DIRECTORY=/chroma/chroma
+      - CHROMA_SERVER_AUTH_PROVIDER=chromadb.auth.token.TokenAuthServerProvider
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]

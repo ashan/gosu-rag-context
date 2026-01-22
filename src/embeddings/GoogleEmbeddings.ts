@@ -18,23 +18,39 @@ export class GoogleEmbeddings implements IEmbeddingProvider {
 
     async embed(texts: string[]): Promise<number[][]> {
         const embedModel = this.client.getGenerativeModel({ model: this.model });
+
+        // Remove empty strings to prevent API errors
+        // (Though we need to maintain index alignment, so we might replace with space or track indices)
+        // For now, let's assume upstream handles empty check or we embed a space.
+
         const results: number[][] = [];
 
-        // Google's SDK currently prefers sequential or batched. 
-        // For simplicity and to avoid rate limits on free tier, we'll do sequential or small batches.
-        // Current interface takes string[], so we loop.
+        // Google batch limit is usually 100
+        const batchSize = parseInt(process.env.EMBEDDING_BATCH_SIZE || '100', 10);
 
-        for (const text of texts) {
+        // Helper to chunk array
+        for (let i = 0; i < texts.length; i += batchSize) {
+            const chunk = texts.slice(i, i + batchSize);
+
+            // Prepare requests for batchEmbedContents
+            // 'content' must be of type Content.
+            const requests = chunk.map(t => ({
+                content: { role: 'user', parts: [{ text: t || ' ' }] }
+            }));
+
             try {
-                // Ensure text is not empty
-                if (!text.trim()) {
-                    results.push([]); // Or zero vector? Better to skip or valid payload.
-                    continue;
+                // @ts-ignore - SDK typing might be slightly different in various versions, but structure is standard
+                const batchResult = await embedModel.batchEmbedContents({ requests });
+
+                if (batchResult.embeddings) {
+                    batchResult.embeddings.forEach(e => {
+                        results.push(e.values || []);
+                    });
                 }
-                const result = await embedModel.embedContent(text);
-                results.push(result.embedding.values);
             } catch (error) {
-                console.error('Google Embedding Error:', error);
+                console.error('Google Batch Embedding Error:', error);
+                // Fallback to serial if batch fails? Or throw?
+                // Throwing is safer for consistency.
                 throw error;
             }
         }

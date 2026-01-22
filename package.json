@@ -14,7 +14,7 @@
         "ingest:code": "tsx src/cli/ingestCode.ts",
         "ingest:docs": "tsx src/cli/ingestDocs.ts",
         "ingest:all": "npm run ingest:code && npm run ingest:docs",
-        "fix:deps": "cd ../gosu-chroma-rag && npm install --legacy-peer-deps && npm rebuild && cd ../chroma-rag-docs && npm install && echo '✅ All sibling dependencies fixed'",
+        "fix:deps": "cd ../gosu-chroma-rag && npm install --legacy-peer-deps && npm rebuild && cd ../chroma-rag-docs && npm install && npm rebuild && echo '✅ All sibling dependencies fixed'",
         "stats": "tsx src/cli/stats.ts",
         "lint": "eslint src --ext .ts",
         "test": "vitest",
