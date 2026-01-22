@@ -64,12 +64,33 @@ export async function runAgent(
         } else if (decision.decision === 'revise') {
             console.log('\n[Agent] Evaluator decided to revise plan\n');
             if (decision.newSteps && decision.newSteps.length > 0) {
+                // Transform newSteps to ensure they have proper structure
+                const baseId = (currentStepIndex + 1) * 100; // Generate new IDs starting from a high number to avoid conflicts
+                const transformedSteps = decision.newSteps.map((step, index) => {
+                    // Handle case where newSteps are strings (LLM returns descriptions)
+                    if (typeof step === 'string') {
+                        return {
+                            id: baseId + index + 1,
+                            title: step.substring(0, 50).replace(/^\d+[\.\)]\s*/, ''), // Extract first 50 chars as title, remove numbering
+                            description: step,
+                            status: 'pending' as const,
+                        };
+                    }
+                    // If it's already a PlanStep object but missing id
+                    return {
+                        id: step.id || (baseId + index + 1),
+                        title: step.title || 'Revised step',
+                        description: step.description || String(step),
+                        status: step.status || 'pending' as const,
+                    };
+                });
+
                 // Replace remaining steps with new steps
                 plan.steps = [
                     ...plan.steps.slice(0, currentStepIndex + 1),
-                    ...decision.newSteps,
+                    ...transformedSteps,
                 ];
-                console.log(`[Agent] Plan revised: ${decision.newSteps.length} new steps added\n`);
+                console.log(`[Agent] Plan revised: ${transformedSteps.length} new steps added\n`);
             }
         } else {
             // Continue to next step

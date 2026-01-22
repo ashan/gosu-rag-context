@@ -38,7 +38,8 @@ export type StepOutcome = z.infer<typeof StepOutcomeSchema>;
 export const PlanDecisionSchema = z.object({
     decision: z.enum(['continue', 'finalize', 'revise']),
     reason: z.string().min(1),
-    newSteps: z.array(PlanStepSchema).nullable().optional(),
+    // newSteps can be strings (LLM descriptions) or full PlanStep objects
+    newSteps: z.array(z.union([z.string(), PlanStepSchema])).nullable().optional(),
 });
 
 export type PlanDecision = z.infer<typeof PlanDecisionSchema>;
