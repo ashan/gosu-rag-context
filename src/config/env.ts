@@ -29,6 +29,18 @@ export const LogLevelSchema = z.enum(['error', 'warn', 'info', 'debug', 'trace']
 export type LogLevel = z.infer<typeof LogLevelSchema>;
 
 /**
+ * Guidewire source configuration for multi-module support
+ * Each entry represents a Guidewire module (policycenter, billingcenter, etc.)
+ */
+export const GuidewireSourceSchema = z.object({
+    module: z.string().min(1).describe('Module identifier (e.g., policycenter, billingcenter)'),
+    codePath: z.string().min(1).describe('Path to Gosu source code for this module'),
+    docsPath: z.string().optional().describe('Optional path to PDF documentation for this module'),
+});
+
+export type GuidewireSource = z.infer<typeof GuidewireSourceSchema>;
+
+/**
  * Complete configuration schema with validation
  */
 const ConfigSchema = z.object({
@@ -58,8 +70,23 @@ const ConfigSchema = z.object({
     chromaTenant: z.string().optional(),
     chromaDatabase: z.string().optional(),
 
-    // Source Codebase (for file system tools)
-    sourceRootPath: z.string().optional(),
+    // Guidewire Source Configuration (Multi-Module)
+    guidewireSources: z.preprocess(
+        (val) => {
+            if (!val || val === '') return [];
+            try {
+                return JSON.parse(val as string);
+            } catch {
+                return [];
+            }
+        },
+        z.array(GuidewireSourceSchema).default([])
+    ),
+
+    // Legacy single-path configs (backwards compatible)
+    codeSourcePath: z.string().optional(),
+    docsSourcePath: z.string().optional(),
+    sourceRootPath: z.string().optional(), // Deprecated: use guidewireSources
 
     // Runtime
     maxTurns: z.coerce.number().int().positive().default(10),
@@ -131,7 +158,12 @@ export function loadConfig(): Config {
             chromaTenant: process.env.CHROMA_TENANT,
             chromaDatabase: process.env.CHROMA_DATABASE,
 
-            // Source Codebase
+            // Guidewire Sources (Multi-Module)
+            guidewireSources: process.env.GUIDEWIRE_SOURCES,
+
+            // Legacy single-path configs (backwards compatible)
+            codeSourcePath: process.env.CODE_SOURCE_PATH,
+            docsSourcePath: process.env.DOCS_SOURCE_PATH,
             sourceRootPath: process.env.SOURCE_ROOT_PATH,
 
             // Runtime
@@ -238,4 +270,57 @@ export function getChromaUrl(config: Config): string {
  */
 export function clearConfigCache(): void {
     cachedConfig = null;
+}
+
+/**
+ * Get unified list of Guidewire sources
+ * Returns guidewireSources if configured, otherwise falls back to legacy single-path configs
+ */
+export function getGuidewireSources(config: Config): GuidewireSource[] {
+    // If guidewireSources is configured, use it
+    if (config.guidewireSources && config.guidewireSources.length > 0) {
+        return config.guidewireSources;
+    }
+
+    // Fallback to legacy single-path configs
+    const sources: GuidewireSource[] = [];
+
+    if (config.codeSourcePath) {
+        // Derive module name from folder name
+        const pathParts = config.codeSourcePath.split('/').filter(Boolean);
+        const module = pathParts[pathParts.length - 1]?.toLowerCase() || 'default';
+        sources.push({
+            module,
+            codePath: config.codeSourcePath,
+            docsPath: config.docsSourcePath,
+        });
+    } else if (config.sourceRootPath) {
+        // Fallback to deprecated sourceRootPath
+        const pathParts = config.sourceRootPath.split('/').filter(Boolean);
+        const module = pathParts[pathParts.length - 1]?.toLowerCase() || 'default';
+        sources.push({
+            module,
+            codePath: config.sourceRootPath,
+        });
+    }
+
+    return sources;
+}
+
+/**
+ * Find a source path by module name
+ */
+export function getSourceByModule(config: Config, moduleName: string): GuidewireSource | undefined {
+    const sources = getGuidewireSources(config);
+    return sources.find(s => s.module.toLowerCase() === moduleName.toLowerCase());
+}
+
+/**
+ * Get all source code paths (for searching across all modules)
+ */
+export function getAllCodePaths(config: Config): { module: string; path: string }[] {
+    return getGuidewireSources(config).map(s => ({
+        module: s.module,
+        path: s.codePath,
+    }));
 }

@@ -2,11 +2,12 @@ import { z } from 'zod';
 import * as fs from 'fs';
 import * as path from 'path';
 import { BaseTool, type ToolContext } from '../Tool.js';
-import { loadConfig } from '../../config/env.js';
+import { loadConfig, getGuidewireSources, getSourceByModule, type GuidewireSource } from '../../config/env.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 const ListSourceDirectoryParamsSchema = z.object({
     path: z.string().optional().describe('Relative path from source root (default: root directory)'),
+    module: z.string().optional().describe('Optional: Filter to specific Guidewire module (e.g., "policycenter"). If not specified, shows all modules at root level.'),
     pattern: z.string().optional().describe('Optional glob pattern to filter files (e.g., "*.xml")'),
 });
 
@@ -14,39 +15,74 @@ type ListSourceDirectoryParams = z.infer<typeof ListSourceDirectoryParamsSchema>
 
 interface DirectoryEntry {
     name: string;
-    type: 'file' | 'directory';
+    type: 'file' | 'directory' | 'module';
+    module?: string;
     size?: number;
 }
 
 interface ListSourceDirectoryResult {
     path: string;
+    module?: string;
     entries: DirectoryEntry[];
     error?: string;
 }
 
 /**
- * Tool for listing directory contents in the source codebase
+ * Tool for listing directory contents in the source codebase (multi-module support)
  */
 export class ListSourceDirectoryTool extends BaseTool<ListSourceDirectoryParams, ListSourceDirectoryResult> {
     readonly name = 'list_source_directory';
     readonly description =
         'List files and subdirectories in a source codebase directory. ' +
-        'Use this to explore the directory structure and discover files. ' +
+        'Without a module specified, shows available Guidewire modules at root. ' +
+        'With a module, explores that module\'s directory structure. ' +
         'Optionally filter by pattern (e.g., "*.xml" for XML files only).';
     readonly parameters = ListSourceDirectoryParamsSchema;
 
     async execute(args: ListSourceDirectoryParams, _ctx: ToolContext): Promise<ListSourceDirectoryResult> {
         const config = loadConfig();
-        const sourceRoot = config.sourceRootPath;
+        const allSources = getGuidewireSources(config);
 
-        if (!sourceRoot) {
+        if (allSources.length === 0) {
             return {
                 path: args.path || '.',
+                module: args.module,
                 entries: [],
-                error: 'SOURCE_ROOT_PATH is not configured in .env',
+                error: 'No Guidewire sources configured. Set GUIDEWIRE_SOURCES or CODE_SOURCE_PATH in .env',
             };
         }
 
+        // If no module specified and no path, list available modules
+        if (!args.module && (!args.path || args.path === '.')) {
+            const entries: DirectoryEntry[] = allSources.map(source => ({
+                name: source.module,
+                type: 'module' as const,
+                module: source.module,
+            }));
+            return {
+                path: '.',
+                entries,
+            };
+        }
+
+        // Get the specific module to list
+        let source: GuidewireSource | undefined;
+        if (args.module) {
+            source = getSourceByModule(config, args.module);
+            if (!source) {
+                return {
+                    path: args.path || '.',
+                    module: args.module,
+                    entries: [],
+                    error: `Module "${args.module}" not found. Available modules: ${allSources.map(s => s.module).join(', ')}`,
+                };
+            }
+        } else {
+            // Use the first available source if no module specified
+            source = allSources[0];
+        }
+
+        const sourceRoot = source.codePath;
         const targetPath = args.path || '.';
 
         // Security: Prevent path traversal attacks
@@ -54,6 +90,7 @@ export class ListSourceDirectoryTool extends BaseTool<ListSourceDirectoryParams,
         if (normalizedPath.startsWith('..') || (path.isAbsolute(normalizedPath) && normalizedPath !== '.')) {
             return {
                 path: targetPath,
+                module: source.module,
                 entries: [],
                 error: 'Invalid path: must be a relative path without parent directory traversal',
             };
@@ -67,6 +104,7 @@ export class ListSourceDirectoryTool extends BaseTool<ListSourceDirectoryParams,
         if (!resolvedPath.startsWith(resolvedRoot)) {
             return {
                 path: targetPath,
+                module: source.module,
                 entries: [],
                 error: 'Path traversal not allowed',
             };
@@ -77,6 +115,7 @@ export class ListSourceDirectoryTool extends BaseTool<ListSourceDirectoryParams,
             if (!stats.isDirectory()) {
                 return {
                     path: targetPath,
+                    module: source.module,
                     entries: [],
                     error: 'Path is not a directory (use read_source_file for files)',
                 };
@@ -87,6 +126,7 @@ export class ListSourceDirectoryTool extends BaseTool<ListSourceDirectoryParams,
                 const entry: DirectoryEntry = {
                     name: item.name,
                     type: item.isDirectory() ? 'directory' : 'file',
+                    module: source!.module,
                 };
 
                 if (item.isFile()) {
@@ -123,11 +163,13 @@ export class ListSourceDirectoryTool extends BaseTool<ListSourceDirectoryParams,
 
             return {
                 path: targetPath,
+                module: source.module,
                 entries,
             };
         } catch (error: any) {
             return {
                 path: targetPath,
+                module: source.module,
                 entries: [],
                 error: error.code === 'ENOENT' ? 'Directory not found' : error.message,
             };
