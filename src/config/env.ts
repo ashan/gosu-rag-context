@@ -276,7 +276,9 @@ export function clearConfigCache(): void {
  * Get unified list of Guidewire sources
  * Returns guidewireSources if configured, otherwise falls back to legacy single-path configs
  */
-export function getGuidewireSources(config: Config): GuidewireSource[] {
+export function getGuidewireSources(): GuidewireSource[] {
+    const config = loadConfig();
+
     // If guidewireSources is configured, use it
     if (config.guidewireSources && config.guidewireSources.length > 0) {
         return config.guidewireSources;
@@ -310,16 +312,16 @@ export function getGuidewireSources(config: Config): GuidewireSource[] {
 /**
  * Find a source path by module name
  */
-export function getSourceByModule(config: Config, moduleName: string): GuidewireSource | undefined {
-    const sources = getGuidewireSources(config);
+export function getSourceByModule(moduleName: string): GuidewireSource | undefined {
+    const sources = getGuidewireSources();
     return sources.find(s => s.module.toLowerCase() === moduleName.toLowerCase());
 }
 
 /**
  * Get all source code paths (for searching across all modules)
  */
-export function getAllCodePaths(config: Config): { module: string; path: string }[] {
-    return getGuidewireSources(config).map(s => ({
+export function getAllCodePaths(): { module: string; path: string }[] {
+    return getGuidewireSources().map(s => ({
         module: s.module,
         path: s.codePath,
     }));

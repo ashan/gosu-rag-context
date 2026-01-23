@@ -9,7 +9,8 @@ import { ListSourceDirectoryTool } from './implementations/listSourceDirectory.j
 import { FindSourceFilesTool } from './implementations/findSourceFiles.js';
 import { FindSimilarChangesTool } from './implementations/findSimilarChanges.js';
 import { ValidateEntityTool } from './implementations/validateEntity.js';
-import { loadConfig } from '../config/env.js';
+import { GenerateDiffTool } from './implementations/generateDiff.js';
+import { loadConfig, getGuidewireSources } from '../config/env.js';
 
 /**
  * Tool registry - manages all available tools
@@ -39,6 +40,11 @@ export class ToolRegistry {
         // Pattern discovery and entity validation tools
         this.registerTool(new FindSimilarChangesTool());
         this.registerTool(new ValidateEntityTool());
+
+        // Code modification tools (only if Guidewire sources configured)
+        if (getGuidewireSources().length > 0) {
+            this.registerTool(new GenerateDiffTool());
+        }
     }
 
     /**
