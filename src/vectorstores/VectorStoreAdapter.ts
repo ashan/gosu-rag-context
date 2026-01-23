@@ -8,6 +8,9 @@ export interface ChunkMetadata {
     /** Path relative to source root */
     relativePath: string;
 
+    /** Guidewire module (policycenter, billingcenter, etc.) */
+    module?: string;
+
     /** Package or namespace */
     package?: string;
 
@@ -78,6 +81,9 @@ export interface SearchHit {
  * Filter options for vector store queries
  */
 export interface QueryFilter {
+    /** Filter by Guidewire module (policycenter, billingcenter, etc.) */
+    module?: string;
+
     /** Filter by package name */
     package?: string;
 

@@ -7,6 +7,8 @@ import { GuidewireDocsTool } from './implementations/docSearch.js';
 import { ReadSourceFileTool } from './implementations/readSourceFile.js';
 import { ListSourceDirectoryTool } from './implementations/listSourceDirectory.js';
 import { FindSourceFilesTool } from './implementations/findSourceFiles.js';
+import { FindSimilarChangesTool } from './implementations/findSimilarChanges.js';
+import { ValidateEntityTool } from './implementations/validateEntity.js';
 import { loadConfig } from '../config/env.js';
 
 /**
@@ -33,6 +35,10 @@ export class ToolRegistry {
             this.registerTool(new ListSourceDirectoryTool());
             this.registerTool(new FindSourceFilesTool());
         }
+
+        // Pattern discovery and entity validation tools
+        this.registerTool(new FindSimilarChangesTool());
+        this.registerTool(new ValidateEntityTool());
     }
 
     /**
