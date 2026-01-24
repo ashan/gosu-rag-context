@@ -88,6 +88,12 @@ const ConfigSchema = z.object({
     docsSourcePath: z.string().optional(),
     sourceRootPath: z.string().optional(), // Deprecated: use guidewireSources
 
+    // Code Modification Settings
+    requireVerification: z.preprocess(
+        (val) => val === 'true' || val === true,
+        z.boolean().default(true)
+    ),
+
     // Runtime
     maxTurns: z.coerce.number().int().positive().default(10),
     topK: z.coerce.number().int().positive().default(6),
